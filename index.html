@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ACI Motors Ltd. Digital Workplace</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Firebase SDKs (Compat for Single-File Web App) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            aci: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+              dark: '#0f172a',
+              primary: '#005a36'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Times New Roman"', 'Times', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @media print {
+      body * { visibility: hidden; }
+      .printable-area, .printable-area * { visibility: visible; }
+      .printable-area { position: absolute; left: 0; top: 0; width: 100%; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased flex h-screen overflow-hidden font-sans">
+
+  <!-- ==================== MOBILE BACKDROP ==================== -->
+  <div id="sidebarBackdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-950/60 z-30 hidden md:hidden transition-opacity"></div>
+
+  <!-- ==================== LEFT SIDEBAR ==================== -->
+  <aside id="mainSidebar" class="fixed md:static inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-40 transition-transform -translate-x-full md:translate-x-0 border-r border-slate-800 shadow-2xl md:shadow-none">
+    <div class="h-16 flex items-center justify-between px-5 bg-slate-950/80 border-b border-slate-800">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-emerald-900/50">
+          ACI
+        </div>
+        <div>
+          <h1 class="font-bold text-white text-xs tracking-wider">ACI MOTORS LTD.</h1>
+          <p class="text-[10px] text-emerald-400 font-medium">Cloud Workplace V3.5</p>
+        </div>
+      </div>
+      <button onclick="toggleMobileSidebar()" class="md:hidden text-slate-400 hover:text-white">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- Navigation Menu -->
+    <div class="flex-1 overflow-y-auto py-4 px-3 space-y-1.5 hide-scrollbar">
+      <div class="px-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Main Hub</div>
+
+      <button onclick="switchTab('feed')" id="nav-feed" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition bg-emerald-600/20 text-emerald-400 border border-emerald-500/30">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="rss" class="w-4 h-4"></i> Corporate Feed
+        </div>
+        <span class="bg-emerald-500/20 text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-bold">Cloud</span>
+      </button>
+
+      <button onclick="switchTab('mywork')" id="nav-mywork" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition hover:bg-slate-800 hover:text-white text-slate-300">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="briefcase" class="w-4 h-4"></i> My Work Desk
+        </div>
+        <span class="bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded-full font-bold" id="mywork-badge-count">0</span>
+      </button>
+
+      <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition hover:bg-slate-800 hover:text-white text-slate-300">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Executive Dashboard
+      </button>
+
+      <div class="pt-3 px-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Requisitions & Finance</div>
+
+      <button onclick="switchTab('ebills')" id="nav-ebills" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition hover:bg-slate-800 hover:text-white text-slate-300">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="receipt" class="w-4 h-4"></i> E-Bill Center
+        </div>
+        <span class="bg-blue-500/20 text-blue-300 text-[10px] px-2 py-0.5 rounded-full font-bold" id="sidebar-bill-count">0</span>
+      </button>
+
+      <button onclick="switchTab('payments')" id="nav-payments" class="nav-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition hover:bg-slate-800 hover:text-white text-slate-300">
+        <i data-lucide="wallet" class="w-4 h-4"></i> My Payments & Cheques
+      </button>
+
+      <div class="pt-3 px-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Field & Hierarchy</div>
+
+      <button onclick="switchTab('fieldops')" id="nav-fieldops" class="nav-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition hover:bg-slate-800 hover:text-white text-slate-300">
+        <i data-lucide="map-pin" class="w-4 h-4"></i> GPS Attendance & Fuel
+      </button>
+
+      <button onclick="switchTab('orgtree')" id="nav-orgtree" class="nav-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition hover:bg-slate-800 hover:text-white text-slate-300">
+        <i data-lucide="network" class="w-4 h-4"></i> Org Tree & Team
+      </button>
+
+      <button onclick="switchTab('admin')" id="nav-admin" class="nav-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition hover:bg-slate-800 hover:text-white text-slate-300">
+        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i> SOP & Admin Panel
+      </button>
+    </div>
+
+    <!-- Active User Footer Profile -->
+    <div class="p-3 border-t border-slate-800 bg-slate-950/70">
+      <div class="flex items-center gap-2.5 p-2 rounded-xl bg-slate-800/80 border border-slate-700/60">
+        <div class="relative">
+          <div class="w-9 h-9 rounded-lg bg-emerald-700 text-white font-black text-xs flex items-center justify-center ring-2 ring-emerald-500">
+            MS
+          </div>
+          <span class="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-900 rounded-full"></span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs font-bold text-white truncate">Md. Saju</p>
+          <p class="text-[10px] text-slate-400 truncate">Supply Chain • Staff ID: 28077</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== MAIN CONTENT VIEWPORT ==================== -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50">
+    
+    <!-- TOP GLOBAL NAVBAR -->
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 z-20 shadow-sm">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleMobileSidebar()" class="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+        
+        <div class="relative w-48 sm:w-72 md:w-96">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input type="text" id="globalSearchInput" onkeyup="handleGlobalSearch(event)" placeholder="Search LFA, Clearance, Capture, Memo..." 
+                 class="w-full bg-slate-100 text-xs rounded-xl pl-9 pr-4 py-2 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition" />
+          <div id="searchDropdown" class="absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 hidden divide-y divide-slate-100 text-xs overflow-hidden">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <span class="hidden xl:inline-flex items-center text-xs font-semibold text-emerald-800 bg-emerald-50 px-3.5 py-1.5 rounded-full border border-emerald-200">
+          🌱 “Less Paper. Less Process. More Productivity.”
+        </span>
+
+        <button onclick="openFormSelectModal()" class="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 sm:px-4 py-2 rounded-xl shadow-sm transition">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i> <span class="hidden sm:inline">New E-Requisition</span>
+        </button>
+
+        <div class="relative cursor-pointer" onclick="toggleNotifications()">
+          <div class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600">
+            <i data-lucide="bell" class="w-4 h-4"></i>
+          </div>
+          <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-white"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT BODY -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-6 hide-scrollbar" id="mainContentContainer">
+
+      <!-- ==================== TAB 1: CORPORATE NEWS FEED ==================== -->
+      <div id="view-feed" class="max-w-3xl mx-auto space-y-5">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-emerald-800 text-white font-bold flex items-center justify-center text-xs">
+              MS
+            </div>
+            <input type="text" id="postInputText" placeholder="Share an official announcement, field update or mention @colleague..." 
+                   class="flex-1 bg-slate-100 text-xs rounded-xl px-4 py-3 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
+          <div class="flex items-center justify-between border-t border-slate-100 pt-3">
+            <div class="flex items-center gap-3 text-slate-500 text-xs font-semibold">
+              <button class="flex items-center gap-1 hover:text-emerald-600"><i data-lucide="image" class="w-4 h-4 text-emerald-500"></i> Photo/Video</button>
+              <button class="flex items-center gap-1 hover:text-blue-600"><i data-lucide="file-text" class="w-4 h-4 text-blue-500"></i> Document</button>
+              <button class="flex items-center gap-1 hover:text-purple-600"><i data-lucide="at-sign" class="w-4 h-4 text-purple-500"></i> @Mention</button>
+            </div>
+            <button onclick="publishNewPost()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm transition">
+              Submit Post
+            </button>
+          </div>
+        </div>
+
+        <!-- Management Broadcast -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden space-y-3">
+          <div class="p-4 flex items-center justify-between border-b border-slate-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-emerald-950 text-white font-extrabold flex items-center justify-center text-xs ring-2 ring-emerald-500">
+                MD
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h4 class="text-xs font-extrabold text-slate-900">Dr. F.H. Ansary</h4>
+                  <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">Managing Director</span>
+                </div>
+                <p class="text-[10px] text-slate-400">Official Broadcast • Yamaha, Sonalika, Agri & Foton Divisions</p>
+              </div>
+            </div>
+            <span class="text-[10px] bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1">
+              📌 Pinned Directive
+            </span>
+          </div>
+
+          <div class="px-5 text-xs text-slate-800 leading-relaxed space-y-2">
+            <p>Dear ACI Motors Family,</p>
+            <p>We are delighted to announce that ACI Motors has recorded milestone deliveries across all Agricultural Machinery & Yamaha Motorcycle networks this month. Let’s stay committed to our paperless digital workflow to maximize operational speed and customer satisfaction!</p>
+          </div>
+
+          <div class="px-5 py-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span>❤️ 194 Likes • 42 Comments</span>
+            <span class="text-emerald-700 font-bold">✓ 92% Read & Acknowledged</span>
+          </div>
+
+          <div class="p-2.5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-around text-xs font-bold text-slate-600">
+            <button class="flex items-center gap-1.5 hover:text-emerald-600 py-1 px-3 rounded-lg"><i data-lucide="thumbs-up" class="w-4 h-4"></i> Like</button>
+            <button class="flex items-center gap-1.5 hover:text-blue-600 py-1 px-3 rounded-lg"><i data-lucide="message-square" class="w-4 h-4"></i> Comment</button>
+            <button class="flex items-center gap-1.5 hover:text-purple-600 py-1 px-3 rounded-lg"><i data-lucide="share-2" class="w-4 h-4"></i> Share</button>
+          </div>
+        </div>
+
+        <!-- Automated Team Celebration Post -->
+        <div class="bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100/50 rounded-2xl border border-amber-200 shadow-sm p-5 space-y-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-amber-500 text-white flex items-center justify-center text-lg shadow-sm">
+              💐
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-amber-900">Team Celebration • Wedding Anniversary</h4>
+              <p class="text-xs text-amber-800">Warmest wishes to <strong>Mohammad Asifur Rahman & Somaiya Sultana Nisha</strong>! 🎉</p>
+            </div>
+          </div>
+          <p class="text-xs text-slate-700 italic pl-1">"Wishing you both a lifetime of happiness, harmony and continued success together from all of us at ACI Motors Ltd.!"</p>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 2: MY WORK DESK ==================== -->
+      <div id="view-mywork" class="hidden space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-extrabold text-slate-900">Good Morning, Saju 👋</h2>
+            <p class="text-xs text-slate-500">Here is your daily action queue and priority approval status.</p>
+          </div>
+          <span class="text-xs font-bold bg-white border border-slate-200 px-3.5 py-1.5 rounded-xl text-slate-700 shadow-sm">
+            📅 Fiscal Year: 2026-2027
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black text-sm" id="mywork-pending-box">0</div>
+            <div>
+              <p class="text-xs font-bold text-slate-900">Pending Actions</p>
+              <p class="text-[10px] text-slate-400">Needs review</p>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-sm" id="mywork-submitted-box">0</div>
+            <div>
+              <p class="text-xs font-bold text-slate-900">Total Live Bills</p>
+              <p class="text-[10px] text-slate-400">In Cloud Firestore</p>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-800 flex items-center justify-center font-black text-sm">2</div>
+            <div>
+              <p class="text-xs font-bold text-slate-900">Correction Required</p>
+              <p class="text-[10px] text-rose-600 font-bold">Returned by Audit</p>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-black text-sm">2</div>
+            <div>
+              <p class="text-xs font-bold text-slate-900">Cheques Ready</p>
+              <p class="text-[10px] text-blue-600 font-bold">At Cash Counter</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Priority Action Section -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="text-xs font-extrabold uppercase text-slate-900 flex items-center gap-2 tracking-wider">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-amber-500"></i> PRIORITY ACTIONS REQUIRED (3 Items)
+          </h3>
+
+          <div class="space-y-3">
+            <div class="p-4 rounded-xl border border-rose-200 bg-rose-50/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="bg-rose-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded">CORRECTION</span>
+                  <span class="text-xs font-bold text-slate-900">Medical Bill #ACI-MED-2026-000245</span>
+                  <span class="text-xs font-extrabold text-slate-800">৳ 18,500</span>
+                </div>
+                <p class="text-xs text-rose-900 font-medium mt-1">⚠️ Reason from Finance: "Hospital discharge summary and diagnostic invoice missing."</p>
+              </div>
+              <button onclick="alert('Please update your attachments in the E-Bill Center!')" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition">
+                Fix & Resubmit
+              </button>
+            </div>
+
+            <div class="p-4 rounded-xl border border-blue-200 bg-blue-50/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="bg-blue-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded">CHEQUE READY</span>
+                  <span class="text-xs font-bold text-slate-900">Cheque #CHQ-984728 (LFA 2026 Claim)</span>
+                  <span class="text-xs font-extrabold text-slate-800">৳ 25,000</span>
+                </div>
+                <p class="text-xs text-blue-900 font-medium mt-1">🏦 Ready at Cash Counter (Counter #2, HQ 4th Floor). Daily reminder active.</p>
+              </div>
+              <button onclick="alert('Digital Acknowledgment Sent to Cash Counter!')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition">
+                Confirm Collection
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 3: EXECUTIVE DASHBOARD ==================== -->
+      <div id="view-dashboard" class="hidden space-y-6">
+        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 text-white p-6 rounded-2xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="bg-emerald-500/20 text-emerald-300 text-xs px-2.5 py-0.5 rounded-full font-bold border border-emerald-500/30">ACI Motors Ltd. Executive Overview</span>
+            </div>
+            <h2 class="text-2xl font-black mt-2 tracking-tight">Corporate Operations Cockpit</h2>
+            <p class="text-xs text-slate-300 mt-1">Live status of Paperless Requisitions synced with Cloud Firestore.</p>
+          </div>
+          <button onclick="openTopSheetModal()" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-4 py-2.5 rounded-xl border border-white/20 backdrop-blur transition">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i> Generate Top Sheet (Batch)
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Claims Volume</p>
+            <h3 class="text-xl font-extrabold text-slate-900 mt-1" id="dash-total-amount">৳ 0</h3>
+            <span class="text-[10px] text-emerald-600 font-bold mt-1 block" id="dash-total-count">0 Total Claims</span>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-amber-200 bg-amber-50/20 shadow-sm">
+            <p class="text-[10px] font-bold text-amber-700 uppercase tracking-widest">Pending Approvals</p>
+            <h3 class="text-xl font-extrabold text-amber-900 mt-1" id="dash-pending-count">0</h3>
+            <span class="text-[10px] text-amber-700 font-semibold mt-1 block">In Pipeline Chains</span>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-emerald-200 bg-emerald-50/20 shadow-sm">
+            <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Fully Approved</p>
+            <h3 class="text-xl font-extrabold text-emerald-900 mt-1" id="dash-approved-count">0</h3>
+            <span class="text-[10px] text-emerald-700 font-semibold mt-1 block">Cleared & Signed</span>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-blue-200 bg-blue-50/20 shadow-sm">
+            <p class="text-[10px] font-bold text-blue-700 uppercase tracking-widest">Payment Pending</p>
+            <h3 class="text-xl font-extrabold text-blue-900 mt-1">1</h3>
+            <span class="text-[10px] text-blue-700 font-semibold mt-1 block">Cheque / EFT Queue</span>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm col-span-2 md:col-span-1">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Settled / Completed</p>
+            <h3 class="text-xl font-extrabold text-slate-900 mt-1">1</h3>
+            <span class="text-[10px] text-emerald-600 font-bold mt-1 block">Cash Paid</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 4: E-BILL CENTER ==================== -->
+      <div id="view-ebills" class="hidden space-y-5">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h2 class="text-xl font-extrabold text-slate-900">Corporate E-Bill & Requisition Center</h2>
+            <p class="text-xs text-slate-500">Connected to Cloud Firestore Database. Real-time updates active.</p>
+          </div>
+
+          <div class="flex items-center gap-2.5">
+            <select id="billFilterType" onchange="filterBillsTable()" class="bg-white border border-slate-300 text-xs font-semibold rounded-xl px-3 py-2 text-slate-700 focus:ring-2 focus:ring-emerald-500">
+              <option value="ALL">All Bill Types</option>
+              <option value="Official Note Sheet">Official Note Sheet / Memo</option>
+              <option value="FF Petty Cash">FF Petty Cash (19 Heads)</option>
+              <option value="Local Petty Cash Voucher">Local Petty Cash (Dhaka Temp)</option>
+              <option value="Machine Capture Bill">Machine Capture & Repossession Bill</option>
+              <option value="Exchange Bill">Dealer / Customer Exchange Bill</option>
+              <option value="Cheque Reissue Form">Cheque Reissue Request</option>
+              <option value="Business Card Requisition">Business Card Requisition</option>
+              <option value="Employee Clearance">Employee Exit Clearance</option>
+            </select>
+
+            <button onclick="openFormSelectModal()" class="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm transition">
+              <i data-lucide="plus" class="w-4 h-4"></i> Create New
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+              <thead class="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                <tr>
+                  <th class="py-3.5 px-4">Bill / Temp ID</th>
+                  <th class="py-3.5 px-4">Employee / Submitter</th>
+                  <th class="py-3.5 px-4">Form / Bill Type</th>
+                  <th class="py-3.5 px-4">Business Wing</th>
+                  <th class="py-3.5 px-4">Amount</th>
+                  <th class="py-3.5 px-4">Current Stage</th>
+                  <th class="py-3.5 px-4">Status</th>
+                  <th class="py-3.5 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="masterBillsTableBody" class="divide-y divide-slate-100">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 5: MY PAYMENTS & CHEQUES ==================== -->
+      <div id="view-payments" class="hidden space-y-5">
+        <div>
+          <h2 class="text-xl font-extrabold text-slate-900">My Payment Settlements & Cheques</h2>
+          <p class="text-xs text-slate-500">Real-time tracking of Cash Counter collections and Bank A/C Pay transfers.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <table class="w-full text-left text-xs text-slate-600">
+            <thead class="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase border-b border-slate-200">
+              <tr>
+                <th class="py-3.5 px-4">Bill ID</th>
+                <th class="py-3.5 px-4">Bill Type</th>
+                <th class="py-3.5 px-4">Claimed Amount</th>
+                <th class="py-3.5 px-4">Payment Method</th>
+                <th class="py-3.5 px-4">Cheque / Trx No.</th>
+                <th class="py-3.5 px-4">Settlement Date</th>
+                <th class="py-3.5 px-4">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td class="py-3.5 px-4 font-bold text-slate-900 font-mono">ACI-LFA-2026-000102</td>
+                <td class="py-3.5 px-4">LFA Claim (FY 2026-27)</td>
+                <td class="py-3.5 px-4 font-extrabold text-slate-900">৳ 25,000</td>
+                <td class="py-3.5 px-4">Cheque (Cash Counter #2)</td>
+                <td class="py-3.5 px-4 font-mono font-bold text-blue-600">CHQ-984728</td>
+                <td class="py-3.5 px-4">05 Sep 2026</td>
+                <td class="py-3.5 px-4"><span class="bg-blue-100 text-blue-800 text-[10px] font-extrabold px-2.5 py-0.5 rounded">Ready to Collect</span></td>
+              </tr>
+              <tr>
+                <td class="py-3.5 px-4 font-bold text-slate-900 font-mono">P.244100</td>
+                <td class="py-3.5 px-4">Local Petty Cash (Dhaka)</td>
+                <td class="py-3.5 px-4 font-extrabold text-slate-900">৳ 1,965</td>
+                <td class="py-3.5 px-4">Corporate Cash Section</td>
+                <td class="py-3.5 px-4 font-mono text-slate-700">VR-882190</td>
+                <td class="py-3.5 px-4">24 Sep 2026</td>
+                <td class="py-3.5 px-4"><span class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2.5 py-0.5 rounded">Cash Paid / Completed</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 6: GPS ATTENDANCE & FUEL ==================== -->
+      <div id="view-fieldops" class="hidden space-y-5">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900">GPS Daily Movement & Auto Fuel Calculator</h3>
+              <p class="text-xs text-slate-500">Configured Fuel Rate: <strong class="text-emerald-700">৳ 3.50 / KM</strong> (Admin Set for Motorcycle)</p>
+            </div>
+            <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
+              <span class="w-2 h-2 bg-emerald-600 rounded-full animate-pulse"></span> GPS Tracking Active
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <p class="text-[10px] font-bold text-slate-400 uppercase">Morning Active Check-In</p>
+              <p class="text-sm font-bold text-slate-900 mt-1">08:45 AM • Bogura Showroom</p>
+              <p class="text-[10px] text-emerald-600 font-semibold mt-0.5">✓ Selfie & Odometer Photo Verified</p>
+            </div>
+
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <p class="text-[10px] font-bold text-slate-400 uppercase">Total Field Distance Traveled</p>
+              <p class="text-2xl font-black text-slate-900 mt-1">62.0 KM</p>
+              <p class="text-[10px] text-slate-400 mt-0.5">8 Dealer & Farmer Points Visited</p>
+            </div>
+
+            <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+              <p class="text-[10px] font-bold text-emerald-800 uppercase">Calculated Fuel Allowance</p>
+              <p class="text-2xl font-black text-emerald-900 mt-1">৳ 217.00</p>
+              <button onclick="alert('Fuel expense attached to your Tour Bill!')" class="text-xs font-bold text-emerald-700 underline mt-1 block">
+                Auto-Attach to Tour Bill ➔
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 7: ORG TREE & EMPLOYEES ==================== -->
+      <div id="view-orgtree" class="hidden space-y-5">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-extrabold text-slate-900">ACI Motors Ltd. Org Tree & Database</h2>
+            <p class="text-xs text-slate-500">Live reporting hierarchy synced from Motors All.xlsx dataset.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Standalone Tree 1: Yamaha Sales -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <h3 class="text-xs font-extrabold uppercase text-slate-900 tracking-wider flex items-center justify-between">
+              Yamaha Sales Hierarchy
+              <span class="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded font-bold">Head: Md. Jakir Hossain (3413)</span>
+            </h3>
+            <div class="text-xs space-y-2 text-slate-700 border-l-2 border-emerald-500 pl-3">
+              <p><strong>Top:</strong> Subrata Ranjan Das (1021) / Engr. Asif Uddin (3221)</p>
+              <p class="pl-2">└── <strong>Director Sales:</strong> Md. Jakir Hossain (3413)</p>
+              <p class="pl-4">├── <strong>North RSM:</strong> Kazi Md. Saif Al Khaled (19623) ➔ Istiak (40980), Mesbah (22774)...</p>
+              <p class="pl-4">├── <strong>South RSM:</strong> Md. Tanvir Ahmed (21020) ➔ Jahirul Islam (23493), Ashed (24651)...</p>
+              <p class="pl-4">├── <strong>Chittagong RM:</strong> A.K.M. Nazim Uddin (17729) ➔ Sahriar (20178), Walid (31395)...</p>
+              <p class="pl-4">└── <strong>Dhaka RSM:</strong> Md. Ohidul Alam Mamun (20696) ➔ Arafath (40981), Minhajul (28003)...</p>
+            </div>
+          </div>
+
+          <!-- Standalone Tree 2: Yamaha Factory -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <h3 class="text-xs font-extrabold uppercase text-slate-900 tracking-wider flex items-center justify-between">
+              Yamaha Factory (Gazipur Plant)
+              <span class="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded font-bold">Head: Md. Saiful Islam (20240)</span>
+            </h3>
+            <div class="text-xs space-y-2 text-slate-700 border-l-2 border-blue-500 pl-3">
+              <p><strong>Top:</strong> Engr. Asif Uddin (3221 / CBO)</p>
+              <p class="pl-2">└── <strong>Plant Head:</strong> Mohammad Saiful Islam (20240 / Deputy Director)</p>
+              <p class="pl-4">├── <strong>Production (DM):</strong> Md. Shawon Rana (22149) ➔ Asaduzzaman (25450)...</p>
+              <p class="pl-4">├── <strong>Inventory & Projects (AGM):</strong> Md. Tahmid Kabir (18053) ➔ Rial (20962)...</p>
+              <p class="pl-4">├── <strong>QC & QA (AM/DM):</strong> Kabirul (24356), Hafijul (20405), Aquib (20424)...</p>
+              <p class="pl-4">└── <strong>HR & Admin:</strong> Daud Al Shams (30807), Nayamul Hossain (23769 / EHS)...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 8: SOP & ADMIN CONTROL PANEL ==================== -->
+      <div id="view-admin" class="hidden space-y-5">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+          <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900">Super Admin Policy & SOP Engine</h3>
+              <p class="text-xs text-slate-500">Only Super Admins have permission to modify these corporate parameters.</p>
+            </div>
+            <span class="bg-rose-100 text-rose-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+              <i data-lucide="lock" class="w-3.5 h-3.5"></i> Admin Protected
+            </span>
+          </div>
+
+          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+            <h4 class="font-bold text-slate-900 text-xs flex items-center gap-2">
+              <i data-lucide="bike" class="w-4 h-4 text-emerald-600"></i> Motorcycle CC-Wise Fuel & Mileage Configurator (Up to 350 CC Legal BD Limit)
+            </h4>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+              <div class="bg-white p-2.5 rounded-lg border border-slate-200">
+                <p class="font-bold text-slate-700">100 - 110 CC</p>
+                <input type="text" value="৳ 2.80 / KM" class="w-full border border-slate-200 rounded p-1 font-bold text-slate-900 mt-1" />
+                <button onclick="alert('Saved 110 CC Rate!')" class="mt-1 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">Save</button>
+              </div>
+              <div class="bg-white p-2.5 rounded-lg border border-slate-200">
+                <p class="font-bold text-slate-700">125 CC (Saluto)</p>
+                <input type="text" value="৳ 3.20 / KM" class="w-full border border-slate-200 rounded p-1 font-bold text-slate-900 mt-1" />
+                <button onclick="alert('Saved 125 CC Rate!')" class="mt-1 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">Save</button>
+              </div>
+              <div class="bg-white p-2.5 rounded-lg border border-slate-200">
+                <p class="font-bold text-slate-700">150 - 160 CC (FZ)</p>
+                <input type="text" value="৳ 3.80 / KM" class="w-full border border-slate-200 rounded p-1 font-bold text-slate-900 mt-1" />
+                <button onclick="alert('Saved 150 CC Rate!')" class="mt-1 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">Save</button>
+              </div>
+              <div class="bg-white p-2.5 rounded-lg border border-slate-200">
+                <p class="font-bold text-slate-700">250 CC</p>
+                <input type="text" value="৳ 4.80 / KM" class="w-full border border-slate-200 rounded p-1 font-bold text-slate-900 mt-1" />
+                <button onclick="alert('Saved 250 CC Rate!')" class="mt-1 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">Save</button>
+              </div>
+              <div class="bg-white p-2.5 rounded-lg border border-slate-200">
+                <p class="font-bold text-slate-700">350 CC (Max)</p>
+                <input type="text" value="৳ 6.20 / KM" class="w-full border border-slate-200 rounded p-1 font-bold text-slate-900 mt-1" />
+                <button onclick="alert('Saved 350 CC Rate!')" class="mt-1 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ==================== MASTER FORM SELECTION MODAL ==================== -->
+  <div id="formSelectModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+        <div>
+          <h3 class="text-sm font-extrabold text-slate-900">Select Requisition / Bill Type</h3>
+          <p class="text-xs text-slate-500">Choose the exact official form template</p>
+        </div>
+        <button onclick="closeModal('formSelectModal')" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs max-h-[75vh] overflow-y-auto hide-scrollbar">
+        <button onclick="openSpecificForm('notesheet')" class="p-3.5 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 rounded-xl text-left transition space-y-1">
+          <p class="font-extrabold text-slate-900">1. Official Note Sheet / Memo</p>
+          <p class="text-[10px] text-slate-500">Times New Roman, CC, Tables & 4-Tier IP Sign Block</p>
+        </button>
+
+        <button onclick="openSpecificForm('ffpettycash')" class="p-3.5 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 rounded-xl text-left transition space-y-1">
+          <p class="font-extrabold text-slate-900">2. FF Petty Cash Bill</p>
+          <p class="text-[10px] text-slate-500">19 Fixed Heads, Auto-Sum & Auto In-Words</p>
+        </button>
+
+        <button onclick="openSpecificForm('localpettycash')" class="p-3.5 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 rounded-xl text-left transition space-y-1">
+          <p class="font-extrabold text-slate-900">3. Local Petty Cash (Dhaka Temp)</p>
+          <p class="text-[10px] text-slate-500">10 Debit A/C Rules & Cash Counter Vr Settlement</p>
+        </button>
+
+        <button onclick="openSpecificForm('businesscard')" class="p-3.5 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 rounded-xl text-left transition space-y-1">
+          <p class="font-extrabold text-slate-900">4. Business Card Requisition</p>
+          <p class="text-[10px] text-slate-500">Form 0012 ➔ Tanvir Muttaki ➔ Vendor Print</p>
+        </button>
+
+        <button onclick="openSpecificForm('clearance')" class="p-3.5 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 rounded-xl text-left transition space-y-1">
+          <p class="font-extrabold text-slate-900">5. Employee Exit Clearance</p>
+          <p class="text-[10px] text-slate-500">2-Page Checklist & 6 Dept Smart Asset Signal</p>
+        </button>
+
+        <button onclick="openSpecificForm('capturebill')" class="p-3.5 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 rounded-xl text-left transition space-y-1">
+          <p class="font-extrabold text-slate-900">6. Machine Capture & Recovery Bill</p>
+          <p class="text-[10px] text-slate-500">Tractor/Harvester 7 Heads & 30-RTM Matrix</p>
+        </button>
+
+        <button onclick="openSpecificForm('exchangebill')" class="p-3.5 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 rounded-xl text-left transition space-y-1">
+          <p class="font-extrabold text-slate-900">7. Dealer Exchange & Courier Bill</p>
+          <p class="text-[10px] text-slate-500">Cheque Courier Tracking & Incentive Payout</p>
+        </button>
+
+        <button onclick="openSpecificForm('chequereissue')" class="p-3.5 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 rounded-xl text-left transition space-y-1">
+          <p class="font-extrabold text-slate-900">8. Cheque Reissue & Stop Payment</p>
+          <p class="text-[10px] text-slate-500">MICR Error, Lost, Torn, Name/A/C Correction</p>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== REAL INDIVIDUAL FORMS ==================== -->
+
+  <!-- FORM 1: OFFICIAL NOTE SHEET -->
+  <div id="modalNoteSheet" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col overflow-hidden">
+      <div class="px-6 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50 no-print">
+        <h3 class="text-xs font-extrabold text-slate-900">Official Note Sheet / Internal Approval Memo</h3>
+        <button onclick="closeModal('modalNoteSheet')" class="p-1 text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="p-8 overflow-y-auto space-y-4 flex-1 font-serif text-slate-900 text-sm bg-white printable-area hide-scrollbar">
+        <div class="flex justify-between items-start">
+          <div class="w-1/2 space-y-1">
+            <p><strong>From:</strong> <input type="text" id="memoFrom" value="AMM, Motors" class="border-b border-dotted border-slate-400 focus:outline-none w-64" /></p>
+            <p><strong>To:</strong> <input type="text" id="memoTo" value="Deputy Business Director, Motors" class="border-b border-dotted border-slate-400 focus:outline-none w-64 font-bold" /></p>
+          </div>
+          <div class="w-1/2 text-right space-y-1">
+            <p class="font-bold text-base">ACI Motors Ltd.</p>
+            <p class="text-xs">Dhaka, Bangladesh</p>
+            <p><strong>Copy To (CC):</strong> <input type="text" id="memoCC" value="BD, Motors / HR" class="border-b border-dotted border-slate-400 focus:outline-none w-48 text-right" /></p>
+          </div>
+        </div>
+        <div class="border-y border-slate-300 py-1.5 flex justify-between text-xs font-sans">
+          <span><strong>Our Ref:</strong> <input type="text" id="memoRef" value="TO/Service-Cost/26" class="border-b border-dotted border-slate-400 focus:outline-none w-36" /></span>
+          <span><strong>Date:</strong> 27/10/2026</span>
+        </div>
+        <p><strong>Subject:</strong> <input type="text" id="memoSubject" value="Approval for Yamaha Saluto-125 CC Motorcycle Maintenance Service Cost." class="border-b border-dotted border-slate-400 focus:outline-none w-full font-bold" /></p>
+        <p>Dear Sir,</p>
+        <textarea id="memoBody" rows="3" class="w-full border border-slate-200 rounded p-2 text-sm focus:outline-none font-serif leading-relaxed">Bike Service Cost will be deducted from Md. Sabbir Ahmed, Staff Id No. 28077 and amount 6,777 Taka as per bike transfer agreement.</textarea>
+        
+        <table class="w-full border border-slate-400 text-xs font-sans">
+          <thead class="bg-slate-100 font-bold">
+            <tr>
+              <th class="border border-slate-400 p-2 text-left">Employee Name</th>
+              <th class="border border-slate-400 p-2 text-left">Designation</th>
+              <th class="border border-slate-400 p-2 text-center">Staff ID</th>
+              <th class="border border-slate-400 p-2 text-right">Service Cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="border border-slate-400 p-2">Noman Siddiquee</td>
+              <td class="border border-slate-400 p-2">Territory Officer</td>
+              <td class="border border-slate-400 p-2 text-center font-mono">46334</td>
+              <td class="border border-slate-400 p-2 text-right font-bold">BDT: 6,777 TK</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-end gap-2 no-print">
+        <button onclick="closeModal('modalNoteSheet')" class="text-xs font-bold text-slate-600 px-4 py-2 hover:bg-slate-200 rounded-xl">Close</button>
+        <button onclick="submitCustomMemo()" class="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-5 py-2 rounded-xl">Save & Sync to Cloud</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM 2: FF PETTY CASH -->
+  <div id="modalFFPetty" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col overflow-hidden">
+      <div class="px-6 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50 no-print">
+        <h3 class="text-xs font-extrabold text-slate-900">FF Petty Cash Bill (19 Fixed Heads - Interactive Calculator)</h3>
+        <button onclick="closeModal('modalFFPetty')" class="p-1 text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-4 flex-1 text-xs hide-scrollbar">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <div><p class="text-slate-400 font-bold">DURATION</p><input type="text" id="ffClaimDuration" value="15 Sep to 20 Sep 2026" class="w-full bg-transparent font-bold border-b border-slate-300 focus:outline-none" /></div>
+          <div><p class="text-slate-400 font-bold">TERRITORY</p><input type="text" id="ffTerritory" value="Yamaha Flagship Center" class="w-full bg-transparent font-bold border-b border-slate-300 focus:outline-none" /></div>
+          <div><p class="text-slate-400 font-bold">EMPLOYEE</p><input type="text" id="ffEmployee" value="Md Abul Bashar" class="w-full bg-transparent font-bold border-b border-slate-300 focus:outline-none" /></div>
+          <div><p class="text-slate-400 font-bold">STAFF ID</p><input type="text" id="ffStaffId" value="33499" class="w-full bg-transparent font-bold border-b border-slate-300 focus:outline-none font-mono" /></div>
+        </div>
+
+        <table class="w-full border border-slate-200 text-xs">
+          <thead class="bg-slate-100 font-bold">
+            <tr>
+              <th class="p-2 border border-slate-200 text-center w-12">SL</th>
+              <th class="p-2 border border-slate-200 text-left">Description (১৯টি খরচের খাত)</th>
+              <th class="p-2 border border-slate-200 text-right w-40">Amount (৳)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100" id="ffHeadsTableBody">
+          </tbody>
+          <tfoot class="bg-emerald-50 font-bold border-t-2 border-emerald-500">
+            <tr>
+              <td colspan="2" class="p-2 text-right">Grand Total:</td>
+              <td class="p-2 text-right font-extrabold text-emerald-900 font-mono text-sm" id="ffCalculatedTotal">৳ 0</td>
+            </tr>
+            <tr>
+              <td colspan="3" class="p-2 text-xs italic text-slate-700">
+                <strong>In Words:</strong> <span id="ffTotalInWords">Zero Taka Only.</span>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-end gap-2 no-print">
+        <button onclick="closeModal('modalFFPetty')" class="text-xs font-bold text-slate-600 px-4 py-2 hover:bg-slate-200 rounded-xl">Close</button>
+        <button onclick="submitFFPettyCash()" class="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-5 py-2 rounded-xl">Save & Sync to Cloud</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM 3: LOCAL PETTY CASH VOUCHER -->
+  <div id="modalLocalPetty" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col overflow-hidden">
+      <div class="px-6 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50 no-print">
+        <h3 class="text-xs font-extrabold text-slate-900">Local Petty Cash Voucher (Temp # P.244100)</h3>
+        <button onclick="closeModal('modalLocalPetty')" class="p-1 text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-4 flex-1 text-xs hide-scrollbar">
+        <div class="grid grid-cols-3 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <div><p class="text-slate-400 font-bold">PAY TO</p><p class="font-bold text-slate-900">Mukta Dutta (16709)</p></div>
+          <div><p class="text-slate-400 font-bold">TEMP NO</p><p class="font-bold text-slate-900 font-mono">P.244100</p></div>
+          <div><p class="text-slate-400 font-bold">VR NO (CASH)</p><p class="font-bold text-emerald-700 font-mono">VR-882190</p></div>
+        </div>
+        <table class="w-full border border-slate-200 text-xs">
+          <thead class="bg-slate-100 font-bold">
+            <tr>
+              <th class="p-2 border border-slate-200">Particulars</th>
+              <th class="p-2 border border-slate-200">Business</th>
+              <th class="p-2 border border-slate-200">Debit A/C (10 Rules)</th>
+              <th class="p-2 border border-slate-200 text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr><td class="p-2">Dhanmondi to ACI Center (CNG)</td><td class="p-2">Tractor</td><td class="p-2 text-emerald-800 font-semibold">Local conveyance - Mkt.</td><td class="p-2 text-right font-mono font-bold">300</td></tr>
+            <tr><td class="p-2">ACI Center to Dhanmondi (CNG)</td><td class="p-2">Tractor</td><td class="p-2 text-emerald-800 font-semibold">Local conveyance - Mkt.</td><td class="p-2 text-right font-mono font-bold">350</td></tr>
+            <tr><td class="p-2">Saturday Lunch out of office</td><td class="p-2">Tractor</td><td class="p-2 text-blue-800 font-semibold">Staff welfare - mgt staff</td><td class="p-2 text-right font-mono font-bold">330</td></tr>
+          </tbody>
+          <tfoot class="bg-slate-50 font-bold">
+            <tr><td colspan="3" class="p-2 text-right">Total:</td><td class="p-2 text-right font-extrabold text-slate-900 font-mono">৳ 1,965</td></tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-end gap-2 no-print">
+        <button onclick="closeModal('modalLocalPetty')" class="text-xs font-bold text-slate-600 px-4 py-2 hover:bg-slate-200 rounded-xl">Close</button>
+        <button onclick="submitLocalPettyVoucher()" class="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-5 py-2 rounded-xl">Save & Sync to Cloud</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM 4: BUSINESS CARD REQUISITION -->
+  <div id="modalBusinessCard" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col overflow-hidden">
+      <div class="px-6 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50 no-print">
+        <h3 class="text-xs font-extrabold text-slate-900">Admin Gen Form No: 0012 - Business Card Requisition</h3>
+        <button onclick="closeModal('modalBusinessCard')" class="p-1 text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-4 flex-1 text-xs hide-scrollbar">
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+          <p><strong>Name:</strong> Engr. Md. Abdul Mannan | <strong>Staff ID:</strong> 12123</p>
+          <p><strong>Designation:</strong> General Manager, Supply Chain | <strong>Company:</strong> ACI Motors Ltd.</p>
+          <p><strong>Corporate SIM:</strong> +880 1755-542729 | <strong>Ext:</strong> 545 | <strong>Email:</strong> amannan@aci-bd.com</p>
+          <p><strong>Preferred Office Address:</strong> 🔘 [✔] Head Office (ACI Centre, 245 Tejgaon I/A, Dhaka)</p>
+          <p class="text-emerald-700 font-bold mt-2">✓ Auto-Dispatched to Admin: Tanvir Muttaki (muttaki@aci-bd.com) for Vendor Print</p>
+        </div>
+      </div>
+      <div class="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-end gap-2 no-print">
+        <button onclick="closeModal('modalBusinessCard')" class="text-xs font-bold text-slate-600 px-4 py-2 hover:bg-slate-200 rounded-xl">Close</button>
+        <button onclick="submitBusinessCardReq()" class="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-5 py-2 rounded-xl">Save & Sync to Cloud</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM 5: EMPLOYEE CLEARANCE -->
+  <div id="modalClearance" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col overflow-hidden">
+      <div class="px-6 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50 no-print">
+        <h3 class="text-xs font-extrabold text-slate-900">Check-list for Employee Clearance before Final Payment</h3>
+        <button onclick="closeModal('modalClearance')" class="p-1 text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-4 flex-1 text-xs hide-scrollbar">
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 grid grid-cols-3 gap-2">
+          <div><p class="text-slate-400">STAFF ID & NAME</p><p class="font-bold text-slate-900">28077 - Md. Sabbir Ahmed</p></div>
+          <div><p class="text-slate-400">DESIGNATION</p><p class="font-bold text-slate-900">Territory Officer</p></div>
+          <div><p class="text-slate-400">RESIGNED WEF</p><p class="font-bold text-slate-900">15/09/2026</p></div>
+        </div>
+
+        <table class="w-full border border-slate-200 text-xs">
+          <thead class="bg-slate-100 font-bold">
+            <tr>
+              <th class="p-2 border border-slate-200 text-left">Department</th>
+              <th class="p-2 border border-slate-200 text-left">Particulars</th>
+              <th class="p-2 border border-slate-200 text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr><td class="p-2 font-bold">Immediate Superior</td><td class="p-2">Action Plan & Email Forwarding</td><td class="p-2 text-center text-emerald-700 font-bold">🟢 Cleared</td></tr>
+            <tr><td class="p-2 font-bold">MIS / IT Hardware</td><td class="p-2">HP Laptop & Monitor Return</td><td class="p-2 text-center text-emerald-700 font-bold">🟢 Cleared</td></tr>
+            <tr><td class="p-2 font-bold">Corporate Admin</td><td class="p-2">SIM & Motorcycle Record Confirmation</td><td class="p-2 text-center text-emerald-700 font-bold">🟢 Cleared</td></tr>
+            <tr><td class="p-2 font-bold">HR Dept</td><td class="p-2">ID Card, Exit Interview & Notice Period</td><td class="p-2 text-center text-emerald-700 font-bold">🟢 Cleared</td></tr>
+            <tr><td class="p-2 font-bold">Finance (NL I & II)</td><td class="p-2">Motorcycle Loan / Repair Due (৳ 6,777)</td><td class="p-2 text-center text-amber-700 font-bold">🟡 Auto-Deducted</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-end gap-2 no-print">
+        <button onclick="closeModal('modalClearance')" class="text-xs font-bold text-slate-600 px-4 py-2 hover:bg-slate-200 rounded-xl">Close</button>
+        <button onclick="submitClearanceChecklist()" class="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-5 py-2 rounded-xl">Save & Sync to Cloud</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM 6: MACHINE CAPTURE BILL -->
+  <div id="modalCapture" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col overflow-hidden">
+      <div class="px-6 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50 no-print">
+        <h3 class="text-xs font-extrabold text-slate-900">Machine Capture & Repossession Billing Form (Tractor & Harvester)</h3>
+        <button onclick="closeModal('modalCapture')" class="p-1 text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-4 flex-1 text-xs hide-scrollbar">
+        <div class="grid grid-cols-4 gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <div><p class="text-slate-400">CUSTOMER CODE</p><p class="font-bold text-slate-900">F05392 - Mamunur Rashid</p></div>
+          <div><p class="text-slate-400">REGION</p><p class="font-bold text-slate-900">Bogura (Panchbibi)</p></div>
+          <div><p class="text-slate-400">RTM OFFICER</p><p class="font-bold text-slate-900">Md. Abdul Alim (13198)</p></div>
+          <div><p class="text-slate-400">TOTAL CAPTURE BILL</p><p class="font-extrabold text-emerald-800 text-sm">৳ 6,000</p></div>
+        </div>
+        <table class="w-full border border-slate-200 text-xs">
+          <thead class="bg-slate-100 font-bold">
+            <tr><th class="p-2 border">Informer</th><th class="p-2 border">Police</th><th class="p-2 border">Driver</th><th class="p-2 border">Fuel</th><th class="p-2 border">Ferry/Toll</th><th class="p-2 border">Transport</th><th class="p-2 border text-right">Total Claim</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="p-2 border text-center">2,500</td><td class="p-2 border text-center">-</td><td class="p-2 border text-center">1,500</td><td class="p-2 border text-center">2,000</td><td class="p-2 border text-center">-</td><td class="p-2 border text-center">-</td><td class="p-2 border text-right font-bold text-emerald-700">৳ 6,000</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-end gap-2 no-print">
+        <button onclick="closeModal('modalCapture')" class="text-xs font-bold text-slate-600 px-4 py-2 hover:bg-slate-200 rounded-xl">Close</button>
+        <button onclick="submitCaptureClaim()" class="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-5 py-2 rounded-xl">Save & Sync to Cloud</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM 7: DEALER EXCHANGE BILL -->
+  <div id="modalExchange" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col overflow-hidden">
+      <div class="px-6 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50 no-print">
+        <h3 class="text-xs font-extrabold text-slate-900">Dealer Exchange Bill & Courier Dispatch Tracking</h3>
+        <button onclick="closeModal('modalExchange')" class="p-1 text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-4 flex-1 text-xs hide-scrollbar">
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+          <p><strong>Dealer / Agent:</strong> Sree Mohon Chandra Sarkar (Cumilla Region)</p>
+          <p><strong>Customer:</strong> Yousof (Customer Code: B03710) | <strong>Amount:</strong> ৳ 15,000</p>
+          <p><strong>Cheque No:</strong> #2868136 | <strong>Issued:</strong> 27-Jan-26 | <strong>Courier Date:</strong> 29-Jan-26</p>
+          <p class="text-emerald-700 font-bold">✓ Approved by MM, DBD & CBO, Motors (Total Batch: ৳ 480,000)</p>
+        </div>
+      </div>
+      <div class="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-end gap-2 no-print">
+        <button onclick="closeModal('modalExchange')" class="text-xs font-bold text-slate-600 px-4 py-2 hover:bg-slate-200 rounded-xl">Close</button>
+        <button onclick="submitExchangeClaim()" class="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-5 py-2 rounded-xl">Save & Sync to Cloud</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM 8: CHEQUE REISSUE FORM -->
+  <div id="modalChequeReissue" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col overflow-hidden">
+      <div class="px-6 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50 no-print">
+        <h3 class="text-xs font-extrabold text-slate-900">Cheque Reissue & Stop Payment Request Form</h3>
+        <button onclick="closeModal('modalChequeReissue')" class="p-1 text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-3 flex-1 text-xs hide-scrollbar">
+        <div>
+          <label class="block font-bold mb-1">Reason for Reissue Request</label>
+          <select id="reissueReason" class="w-full border border-slate-300 rounded-xl p-2 font-semibold bg-white">
+            <option>MICR machine cannot read cheque (Machine error)</option>
+            <option>Wrong Name Spelling provided (Name mismatch)</option>
+            <option>Cheque duration/validity expired (Held during clearance)</option>
+            <option>Cheque lost while couriered / traveling</option>
+            <option>Cheque torn / washed with clothes</option>
+            <option>Wrong Bank Account number provided</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block font-bold mb-1">Original Cheque No</label><input type="text" id="reissueChequeNo" value="2068467" class="w-full border border-slate-300 rounded-xl p-2 font-mono" /></div>
+          <div><label class="block font-bold mb-1">Amount (৳)</label><input type="text" id="reissueAmount" value="৳ 114,510" class="w-full border border-slate-300 rounded-xl p-2 font-bold" /></div>
+        </div>
+        <div><label class="block font-bold mb-1">Correct Payee Name / Bank Account</label><input type="text" id="reissuePayee" value="Aesthete CNG Ltd (A/C Payee)" class="w-full border border-slate-300 rounded-xl p-2 font-bold" /></div>
+      </div>
+      <div class="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-end gap-2 no-print">
+        <button onclick="closeModal('modalChequeReissue')" class="text-xs font-bold text-slate-600 px-4 py-2 hover:bg-slate-200 rounded-xl">Close</button>
+        <button onclick="submitChequeReissue()" class="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-5 py-2 rounded-xl">Save & Sync to Cloud</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BILL DETAILS MODAL -->
+  <div id="billDetailsModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+        <div>
+          <div class="flex items-center gap-3">
+            <h3 class="text-base font-extrabold text-slate-900 font-mono" id="detailBillId">ACI-MED-2026-000245</h3>
+            <span class="bg-amber-100 text-amber-800 text-xs font-extrabold px-2.5 py-0.5 rounded-full" id="detailBillStatus">Pending Finance</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5" id="detailBillSubtext">Submitted by Md. Saju • Supply Chain Division</p>
+        </div>
+        <button onclick="closeModal('billDetailsModal')" class="p-2 text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-5 flex-1 text-xs hide-scrollbar">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+          <div><p class="text-slate-400 font-bold">CLAIM TYPE</p><p class="font-extrabold text-slate-900 mt-0.5" id="detailBillType">Medical Bill</p></div>
+          <div><p class="text-slate-400 font-bold">AMOUNT</p><p class="font-extrabold text-emerald-700 text-sm mt-0.5" id="detailBillAmount">৳ 18,500</p></div>
+          <div><p class="text-slate-400 font-bold">BUSINESS WING</p><p class="font-semibold text-slate-800 mt-0.5" id="detailBillBusiness">Supply Chain</p></div>
+          <div><p class="text-slate-400 font-bold">DATE</p><p class="font-semibold text-slate-800 mt-0.5">27 Oct 2026</p></div>
+        </div>
+        <div>
+          <h4 class="font-bold text-slate-700 uppercase tracking-wider text-[11px] mb-1">Purpose / Details</h4>
+          <p class="bg-white p-3 rounded-xl border border-slate-200 text-slate-700 leading-relaxed" id="detailBillPurpose">Official claim description.</p>
+        </div>
+        <div class="space-y-3">
+          <h4 class="font-extrabold text-slate-900 uppercase tracking-wider text-[11px]">Approval Pipeline (Live Audit Trail & IP Seal)</h4>
+          <div class="space-y-2 border-l-2 border-slate-200 ml-3 pl-4">
+            <div class="relative">
+              <span class="absolute -left-[23px] top-1 w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-white"></span>
+              <p class="font-bold text-slate-900">1. Submitter Prepared</p>
+              <p class="text-[11px] text-slate-500">Staff Initiated • 27 Oct 2026, 09:30 AM</p>
+            </div>
+            <div class="relative pt-2">
+              <span class="absolute -left-[23px] top-3 w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-white"></span>
+              <p class="font-bold text-slate-900">2. Supervisor Checked</p>
+              <p class="text-[11px] text-slate-500">Verified • 27 Oct 2026, 11:15 AM • 💻 IP: 192.168.10.45</p>
+            </div>
+            <div class="relative pt-2">
+              <span class="absolute -left-[23px] top-3 w-3 h-3 rounded-full bg-amber-500 ring-4 ring-white animate-pulse"></span>
+              <p class="font-bold text-amber-900">3. Finance / Business Approval (Active)</p>
+              <p class="text-[11px] text-amber-700 font-semibold">Under Review</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="px-6 py-3.5 border-t border-slate-200 bg-slate-50 flex justify-between items-center">
+        <button onclick="sendBackCurrentBill()" class="flex items-center gap-1.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-4 py-2 rounded-xl transition">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Send Back for Correction
+        </button>
+        <button onclick="approveActiveBill()" class="flex items-center gap-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-5 py-2 rounded-xl shadow-sm transition">
+          <i data-lucide="check" class="w-4 h-4"></i> Approve & Stamp Digital Signature
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== FIREBASE CLOUD INITIALIZATION & LOGIC ==================== -->
+  <script>
+    // Exact User's Real Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAqq6y7xy5_jTm42M5W95oW5QtWsBo3Udo",
+      authDomain: "aci-workplace-web.firebaseapp.com",
+      projectId: "aci-workplace-web",
+      storageBucket: "aci-workplace-web.firebasestorage.app",
+      messagingSenderId: "48232743956",
+      appId: "1:48232743956:web:672deb6dbbb47a74ea9301",
+      measurementId: "G-DWJNSF5RLL"
+    };
+
+    // Initialize Firebase & Cloud Firestore
+    let db = null;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      console.log("✓ Cloud Firestore Successfully Connected!");
+    } catch(err) {
+      console.warn("Firestore running in fallback mode:", err);
+    }
+
+    // 19 Fixed Heads
+    const ffFixedHeads = [
+      { sl: 1, name: "Medicine Bill", defaultVal: 3490 },
+      { sl: 2, name: "Stationary Bill", defaultVal: 0 },
+      { sl: 3, name: "Photocopy Bill", defaultVal: 0 },
+      { sl: 4, name: "Maintenance", defaultVal: 21355 },
+      { sl: 5, name: "Oil, fuel & Kerosin Bill", defaultVal: 11910 },
+      { sl: 6, name: "Consumable product Bill", defaultVal: 13543 },
+      { sl: 7, name: "Newspaper Bill", defaultVal: 0 },
+      { sl: 8, name: "Conveyance Bill (Daily)", defaultVal: 4160 },
+      { sl: 9, name: "Internet Bill (Monthly)", defaultVal: 0 },
+      { sl: 10, name: "Promotional Activity Bill", defaultVal: 0 },
+      { sl: 11, name: "Repair Bill", defaultVal: 16300 },
+      { sl: 12, name: "Cleaning Bill", defaultVal: 0 },
+      { sl: 13, name: "Medical expense Bill", defaultVal: 0 },
+      { sl: 14, name: "Hospitality Bill", defaultVal: 770 },
+      { sl: 15, name: "Courier Bill", defaultVal: 2915 },
+      { sl: 16, name: "Entertainment Bill", defaultVal: 1542 },
+      { sl: 17, name: "Transport Bill", defaultVal: 0 },
+      { sl: 18, name: "Warranty Bill", defaultVal: 0 },
+      { sl: 19, name: "Others Bill", defaultVal: 0 }
+    ];
+
+    // Default Seed Data
+    const defaultMasterBills = [
+      {
+        id: "TO/Service-Cost/26",
+        employee: "Md. Masudur Rahman",
+        designation: "Marketing Service Exec",
+        type: "Official Note Sheet",
+        business: "CEAT Tyre",
+        amount: "৳ 6,777",
+        stage: "GL Cheque Queue",
+        status: "Approved",
+        statusColor: "bg-emerald-100 text-emerald-800",
+        purpose: "Yamaha Saluto bike transfer & repair cost deduction from Staff ID 28077."
+      },
+      {
+        id: "ACI-FFP-2026-000789",
+        employee: "Md Abul Bashar",
+        designation: "In-Charge, Service Center",
+        type: "FF Petty Cash",
+        business: "Yamaha Motors",
+        amount: "৳ 75,985",
+        stage: "Business Recommend",
+        status: "In Review",
+        statusColor: "bg-blue-100 text-blue-800",
+        purpose: "Yamaha Flagship Service Center 19-Heads Petty Cash Bill (Medicine, Oil, Repair)."
+      },
+      {
+        id: "P.244100",
+        employee: "Mukta Dutta",
+        designation: "Executive, Customer Feedback",
+        type: "Local Petty Cash Voucher",
+        business: "Sonalika Tractor",
+        amount: "৳ 1,965",
+        stage: "Cash Counter Queue",
+        status: "Ready for Cash",
+        statusColor: "bg-emerald-100 text-emerald-800",
+        purpose: "Local conveyance (CNG) & Saturday lunch out of office (Debit A/C mapped)."
+      },
+      {
+        id: "CAP-HAR-2025-088",
+        employee: "Md Abdul Alim",
+        designation: "Recovery Territory Manager",
+        type: "Machine Capture Bill",
+        business: "Harvester & NM",
+        amount: "৳ 46,800",
+        stage: "Credit Manager Check",
+        status: "Pending Check",
+        statusColor: "bg-purple-100 text-purple-800",
+        purpose: "Harvester Repossession & Fuel Loading-Unloading Bill (Bogura Region)."
+      },
+      {
+        id: "EXC-NOV-2025-110",
+        employee: "Sree Mohon Chandra",
+        designation: "Dealer Agent Claim",
+        type: "Exchange Bill",
+        business: "Sonalika Tractor",
+        amount: "৳ 15,000",
+        stage: "Couried to Dealer",
+        status: "Dispatched",
+        statusColor: "bg-blue-100 text-blue-800",
+        purpose: "Exchange bonus claim for Customer Yousof (CHQ #2868136 couriered 29-Jan-26)."
+      }
+    ];
+
+    let masterBills = JSON.parse(localStorage.getItem('aci_master_bills')) || defaultMasterBills;
+    let selectedBill = masterBills[0];
+
+    // Sync from Firestore in Real-Time
+    if (db) {
+      db.collection("bills").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+        if (!snapshot.empty) {
+          const cloudBills = [];
+          snapshot.forEach(doc => cloudBills.push({ docId: doc.id, ...doc.data() }));
+          masterBills = cloudBills;
+          renderMasterBillsTable(masterBills);
+          updateDashboardKPIs();
+        }
+      }, err => console.log("Realtime listener error:", err));
+    }
+
+    // Lifecycle Init
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      renderMasterBillsTable(masterBills);
+      buildFFHeadsTable();
+      updateDashboardKPIs();
+    });
+
+    function saveState() {
+      localStorage.setItem('aci_master_bills', JSON.stringify(masterBills));
+      updateDashboardKPIs();
+    }
+
+    function updateDashboardKPIs() {
+      let totalSum = 0;
+      let pendingCount = 0;
+      let approvedCount = 0;
+
+      masterBills.forEach(b => {
+        const amt = parseInt(b.amount.replace(/[^0-9]/g, '')) || 0;
+        totalSum += amt;
+        if (b.status.includes('Review') || b.status.includes('Pending') || b.status.includes('Req')) {
+          pendingCount++;
+        } else {
+          approvedCount++;
+        }
+      });
+
+      document.getElementById('sidebar-bill-count').innerText = masterBills.length;
+      document.getElementById('mywork-submitted-box').innerText = masterBills.length;
+      document.getElementById('mywork-pending-box').innerText = pendingCount;
+      document.getElementById('mywork-badge-count').innerText = pendingCount;
+      document.getElementById('dash-pending-count').innerText = pendingCount;
+      document.getElementById('dash-approved-count').innerText = approvedCount;
+      document.getElementById('dash-total-count').innerText = `${masterBills.length} Total Claims`;
+      document.getElementById('dash-total-amount').innerText = `৳ ${totalSum.toLocaleString('en-IN')}`;
+    }
+
+    // Tab Navigation
+    function switchTab(tabId) {
+      const views = ['feed', 'mywork', 'dashboard', 'ebills', 'payments', 'fieldops', 'orgtree', 'admin'];
+      views.forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        const nav = document.getElementById(`nav-${v}`);
+        if (el) el.classList.add('hidden');
+        if (nav) {
+          nav.classList.remove('bg-emerald-600/20', 'text-emerald-400', 'border', 'border-emerald-500/30');
+          nav.classList.add('text-slate-300');
+        }
+      });
+
+      const currentView = document.getElementById(`view-${tabId}`);
+      const currentNav = document.getElementById(`nav-${tabId}`);
+      if (currentView) currentView.classList.remove('hidden');
+      if (currentNav) {
+        currentNav.classList.add('bg-emerald-600/20', 'text-emerald-400', 'border', 'border-emerald-500/30');
+        currentNav.classList.remove('text-slate-300');
+      }
+
+      const sidebar = document.getElementById('mainSidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      if (sidebar && !sidebar.classList.contains('-translate-x-full') && window.innerWidth < 768) {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+
+      lucide.createIcons();
+    }
+
+    function toggleMobileSidebar() {
+      const sidebar = document.getElementById('mainSidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      sidebar.classList.toggle('-translate-x-full');
+      backdrop.classList.toggle('hidden');
+    }
+
+    // Number to Words Converter in English
+    function numberToWords(num) {
+      const a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+      const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+      
+      num = parseInt(num);
+      if (isNaN(num) || num === 0) return 'Zero Taka Only';
+      
+      function convertGroup(n) {
+        let str = '';
+        if (n >= 100) {
+          str += a[Math.floor(n / 100)] + ' Hundred ';
+          n %= 100;
+        }
+        if (n >= 20) {
+          str += b[Math.floor(n / 10)] + ' ';
+          n %= 10;
+        }
+        if (n > 0) {
+          str += a[n] + ' ';
+        }
+        return str;
+      }
+      
+      let result = '';
+      if (num >= 10000000) {
+        result += convertGroup(Math.floor(num / 10000000)) + 'Crore ';
+        num %= 10000000;
+      }
+      if (num >= 100000) {
+        result += convertGroup(Math.floor(num / 100000)) + 'Lakh ';
+        num %= 100000;
+      }
+      if (num >= 1000) {
+        result += convertGroup(Math.floor(num / 1000)) + 'Thousand ';
+        num %= 1000;
+      }
+      result += convertGroup(num);
+      return result.trim() + ' Taka Only';
+    }
+
+    // Build FF 19 Heads Form
+    function buildFFHeadsTable() {
+      const tbody = document.getElementById("ffHeadsTableBody");
+      tbody.innerHTML = "";
+      ffFixedHeads.forEach(head => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50";
+        tr.innerHTML = `
+          <td class="p-1.5 text-center font-mono text-slate-400">${head.sl}</td>
+          <td class="p-1.5 font-medium text-slate-800">${head.name}</td>
+          <td class="p-1.5 text-right">
+            <input type="number" data-sl="${head.sl}" value="${head.defaultVal || ''}" placeholder="0" 
+                   oninput="calculateFFGrandTotal()" 
+                   class="ff-head-input w-28 text-right p-1 border border-slate-300 rounded font-mono font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      calculateFFGrandTotal();
+    }
+
+    function calculateFFGrandTotal() {
+      const inputs = document.querySelectorAll('.ff-head-input');
+      let total = 0;
+      inputs.forEach(input => {
+        const val = parseFloat(input.value);
+        if (!isNaN(val) && val > 0) total += val;
+      });
+      document.getElementById('ffCalculatedTotal').innerText = `৳ ${total.toLocaleString('en-IN')}`;
+      document.getElementById('ffTotalInWords').innerText = numberToWords(total);
+    }
+
+    // Push new bill to Firestore and local
+    function syncBillToCloud(bill) {
+      bill.createdAt = new Date().toISOString();
+      if (db) {
+        db.collection("bills").add(bill).then(ref => {
+          console.log("Synced to Cloud Firestore with ID:", ref.id);
+        }).catch(e => console.error("Cloud sync failed, stored locally:", e));
+      }
+      masterBills.unshift(bill);
+      saveState();
+      renderMasterBillsTable(masterBills);
+    }
+
+    function submitFFPettyCash() {
+      const duration = document.getElementById('ffClaimDuration').value;
+      const territory = document.getElementById('ffTerritory').value;
+      const emp = document.getElementById('ffEmployee').value;
+      const totalStr = document.getElementById('ffCalculatedTotal').innerText;
+      
+      const newBill = {
+        id: `ACI-FFP-${Math.floor(100000 + Math.random() * 900000)}`,
+        employee: emp,
+        designation: "Showroom In-Charge",
+        type: "FF Petty Cash",
+        business: "Yamaha Motors",
+        amount: totalStr,
+        stage: "Business Check",
+        status: "In Review",
+        statusColor: "bg-blue-100 text-blue-800",
+        purpose: `${territory} 19-Heads Claim for ${duration}`
+      };
+      
+      syncBillToCloud(newBill);
+      closeModal('modalFFPetty');
+      alert(`🎉 FF Petty Cash Bill (${newBill.id}) Synced to Cloud Firestore! Total: ${totalStr}`);
+    }
+
+    function submitCustomMemo() {
+      const from = document.getElementById('memoFrom').value;
+      const to = document.getElementById('memoTo').value;
+      const subject = document.getElementById('memoSubject').value;
+      const ref = document.getElementById('memoRef').value;
+      
+      const newBill = {
+        id: ref || `MEMO-${Math.floor(1000 + Math.random() * 9000)}`,
+        employee: from,
+        designation: "Executive",
+        type: "Official Note Sheet",
+        business: "Motors Corporate",
+        amount: "৳ 6,777",
+        stage: "Business Check",
+        status: "In Review",
+        statusColor: "bg-blue-100 text-blue-800",
+        purpose: subject
+      };
+      
+      syncBillToCloud(newBill);
+      closeModal('modalNoteSheet');
+      alert(`🎉 Official Note Sheet (${newBill.id}) Synced to Cloud!`);
+    }
+
+    function submitLocalPettyVoucher() {
+      const newBill = {
+        id: `P.${Math.floor(200000 + Math.random() * 90000)}`,
+        employee: "Mukta Dutta",
+        designation: "Executive, Customer Feedback",
+        type: "Local Petty Cash Voucher",
+        business: "Sonalika Tractor",
+        amount: "৳ 1,965",
+        stage: "Cash Counter Queue",
+        status: "Ready for Cash",
+        statusColor: "bg-emerald-100 text-emerald-800",
+        purpose: "Local Conveyance & Staff Welfare (Saturday Lunch out of office)"
+      };
+      syncBillToCloud(newBill);
+      closeModal('modalLocalPetty');
+      alert(`🎉 Local Petty Cash Voucher (${newBill.id}) Synced to Cloud!`);
+    }
+
+    function submitBusinessCardReq() {
+      const newBill = {
+        id: `CARD-REQ-${Math.floor(1000 + Math.random() * 9000)}`,
+        employee: "Engr. Md. Abdul Mannan",
+        designation: "General Manager, Supply Chain",
+        type: "Business Card Requisition",
+        business: "Supply Chain",
+        amount: "100 Pcs Box",
+        stage: "Admin Review",
+        status: "Pending Admin",
+        statusColor: "bg-purple-100 text-purple-800",
+        purpose: "Business Card (Admin Gen Form 0012) sent to Tanvir Muttaki for printing."
+      };
+      syncBillToCloud(newBill);
+      closeModal('modalBusinessCard');
+      alert(`🎉 Business Card Requisition (${newBill.id}) Synced to Cloud!`);
+    }
+
+    function submitClearanceChecklist() {
+      const newBill = {
+        id: `CLR-EXIT-28077`,
+        employee: "Md. Sabbir Ahmed",
+        designation: "Territory Officer",
+        type: "Employee Clearance",
+        business: "Motors Field",
+        amount: "৳ 0 Due",
+        stage: "Final Settlement",
+        status: "Cleared",
+        statusColor: "bg-emerald-100 text-emerald-800",
+        purpose: "Exit Clearance completed across 6 departments with bike loan auto-deduction."
+      };
+      syncBillToCloud(newBill);
+      closeModal('modalClearance');
+      alert(`🎉 Employee Exit Clearance (${newBill.id}) Synced to Cloud!`);
+    }
+
+    function submitCaptureClaim() {
+      const newBill = {
+        id: `CAP-${Math.floor(1000 + Math.random() * 9000)}`,
+        employee: "Md. Abdul Alim",
+        designation: "Recovery Territory Manager",
+        type: "Machine Capture Bill",
+        business: "Tractor & HP",
+        amount: "৳ 6,000",
+        stage: "Credit Manager Check",
+        status: "Pending Check",
+        statusColor: "bg-purple-100 text-purple-800",
+        purpose: "Tractor Repossession (F05392) Bogura Region (Informer & Driver fee)"
+      };
+      syncBillToCloud(newBill);
+      closeModal('modalCapture');
+      alert(`🎉 Machine Capture Bill (${newBill.id}) Synced to Cloud!`);
+    }
+
+    function submitExchangeClaim() {
+      const newBill = {
+        id: `EXC-${Math.floor(1000 + Math.random() * 9000)}`,
+        employee: "Sree Mohon Chandra",
+        designation: "Dealer Agent Claim",
+        type: "Exchange Bill",
+        business: "Sonalika Tractor",
+        amount: "৳ 15,000",
+        stage: "Couried to Dealer",
+        status: "Dispatched",
+        statusColor: "bg-blue-100 text-blue-800",
+        purpose: "Exchange bonus claim for Customer Yousof (CHQ couriered 29-Jan-26)"
+      };
+      syncBillToCloud(newBill);
+      closeModal('modalExchange');
+      alert(`🎉 Dealer Exchange Bill (${newBill.id}) Synced to Cloud!`);
+    }
+
+    function submitChequeReissue() {
+      const chequeNo = document.getElementById('reissueChequeNo').value;
+      const amount = document.getElementById('reissueAmount').value;
+      const payee = document.getElementById('reissuePayee').value;
+      const reason = document.getElementById('reissueReason').value;
+
+      const newBill = {
+        id: `REISSUE-${chequeNo}`,
+        employee: payee,
+        designation: "Payee / Vendor",
+        type: "Cheque Reissue Form",
+        business: "Supply Chain Finance",
+        amount: amount,
+        stage: "Finance Verification",
+        status: "Stop & Reissue Req",
+        statusColor: "bg-rose-100 text-rose-800",
+        purpose: `Reason: ${reason}. Stop payment on Cheque #${chequeNo} and reissue.`
+      };
+
+      syncBillToCloud(newBill);
+      closeModal('modalChequeReissue');
+      alert(`🎉 Cheque Reissue Request (${newBill.id}) Synced to Cloud!`);
+    }
+
+    // Render Table
+    function renderMasterBillsTable(bills) {
+      const tbody = document.getElementById("masterBillsTableBody");
+      tbody.innerHTML = "";
+
+      bills.forEach(b => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50/80 transition cursor-pointer";
+        tr.onclick = () => openBillDetails(b.id);
+        tr.innerHTML = `
+          <td class="py-3.5 px-4 font-bold text-slate-900 font-mono">${b.id}</td>
+          <td class="py-3.5 px-4">
+            <div class="font-bold text-slate-900">${b.employee}</div>
+            <div class="text-[10px] text-slate-400">${b.designation}</div>
+          </td>
+          <td class="py-3.5 px-4 font-semibold text-slate-800">${b.type}</td>
+          <td class="py-3.5 px-4 text-slate-700">${b.business}</td>
+          <td class="py-3.5 px-4 font-extrabold text-slate-900">${b.amount}</td>
+          <td class="py-3.5 px-4 text-slate-600">${b.stage}</td>
+          <td class="py-3.5 px-4">
+            <span class="${b.statusColor} text-[10px] font-extrabold px-2.5 py-0.5 rounded">${b.status}</span>
+          </td>
+          <td class="py-3.5 px-4 text-right">
+            <button class="text-xs font-bold text-emerald-600 hover:text-emerald-800">Review ➔</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+
+    function filterBillsTable() {
+      const type = document.getElementById("billFilterType").value;
+      if (type === "ALL") {
+        renderMasterBillsTable(masterBills);
+      } else {
+        renderMasterBillsTable(masterBills.filter(b => b.type === type));
+      }
+    }
+
+    function handleGlobalSearch(event) {
+      const q = event.target.value.toLowerCase().trim();
+      const dd = document.getElementById("searchDropdown");
+      if (!q) {
+        dd.classList.add("hidden");
+        return;
+      }
+      dd.innerHTML = "";
+      dd.classList.remove("hidden");
+
+      if ("lfa".includes(q)) {
+        dd.innerHTML += `<div onclick="switchTab('ebills'); closeModal('searchDropdown');" class="p-2.5 hover:bg-slate-50 cursor-pointer"><strong>🟢 LFA Portal:</strong> FY 2026-27 Eligible (Entitlement: ৳ 25,000)</div>`;
+      }
+      if ("clearance".includes(q)) {
+        dd.innerHTML += `<div onclick="openSpecificForm('clearance'); closeModal('searchDropdown');" class="p-2.5 hover:bg-slate-50 cursor-pointer"><strong>📋 Employee Exit Clearance:</strong> 2-Page Checklist</div>`;
+      }
+      if ("capture".includes(q)) {
+        dd.innerHTML += `<div onclick="openSpecificForm('capturebill'); closeModal('searchDropdown');" class="p-2.5 hover:bg-slate-50 cursor-pointer"><strong>🚜 Machine Capture Bill:</strong> Harvester/Tractor Recovery</div>`;
+      }
+      if ("exchange".includes(q)) {
+        dd.innerHTML += `<div onclick="openSpecificForm('exchangebill'); closeModal('searchDropdown');" class="p-2.5 hover:bg-slate-50 cursor-pointer"><strong>📦 Dealer Exchange Bill:</strong> Cheque Courier Tracking</div>`;
+      }
+
+      const matchedBills = masterBills.filter(b => b.id.toLowerCase().includes(q) || b.employee.toLowerCase().includes(q));
+      matchedBills.forEach(b => {
+        dd.innerHTML += `<div onclick="openBillDetails('${b.id}'); closeModal('searchDropdown');" class="p-2.5 hover:bg-slate-50 cursor-pointer"><strong>${b.id}</strong> - ${b.employee} (${b.type})</div>`;
+      });
+    }
+
+    function openBillDetails(id) {
+      const bill = masterBills.find(b => b.id === id) || masterBills[0];
+      selectedBill = bill;
+
+      document.getElementById("detailBillId").innerText = bill.id;
+      document.getElementById("detailBillStatus").innerText = bill.status;
+      document.getElementById("detailBillSubtext").innerText = `Submitted by ${bill.employee} • ${bill.business}`;
+      document.getElementById("detailBillType").innerText = bill.type;
+      document.getElementById("detailBillAmount").innerText = bill.amount;
+      document.getElementById("detailBillBusiness").innerText = bill.business;
+      document.getElementById("detailBillPurpose").innerText = bill.purpose;
+
+      document.getElementById("billDetailsModal").classList.remove("hidden");
+      lucide.createIcons();
+    }
+
+    function approveActiveBill() {
+      selectedBill.status = "Approved & Signed";
+      selectedBill.statusColor = "bg-emerald-100 text-emerald-800";
+      selectedBill.stage = "Settlement Complete";
+
+      if (db && selectedBill.docId) {
+        db.collection("bills").doc(selectedBill.docId).update({
+          status: selectedBill.status,
+          statusColor: selectedBill.statusColor,
+          stage: selectedBill.stage
+        });
+      }
+
+      saveState();
+      renderMasterBillsTable(masterBills);
+      closeModal('billDetailsModal');
+      alert(`✅ Bill ${selectedBill.id} Approved! Digital Signature, Timestamp & IP Stamped.`);
+    }
+
+    function sendBackCurrentBill() {
+      const reason = prompt("Enter correction reason for employee:", "Please attach missing diagnostic invoice or voucher.");
+      if (reason) {
+        selectedBill.status = "Correction Req.";
+        selectedBill.statusColor = "bg-rose-100 text-rose-800";
+        selectedBill.stage = "Returned to Submitter";
+
+        if (db && selectedBill.docId) {
+          db.collection("bills").doc(selectedBill.docId).update({
+            status: selectedBill.status,
+            statusColor: selectedBill.statusColor,
+            stage: selectedBill.stage,
+            correctionReason: reason
+          });
+        }
+
+        saveState();
+        renderMasterBillsTable(masterBills);
+        closeModal('billDetailsModal');
+        alert(`⚠️ Bill sent back to ${selectedBill.employee} with note: "${reason}"`);
+      }
+    }
+
+    function openFormSelectModal() {
+      document.getElementById("formSelectModal").classList.remove("hidden");
+      lucide.createIcons();
+    }
+
+    function openSpecificForm(formKey) {
+      closeModal('formSelectModal');
+      const modalMap = {
+        'notesheet': 'modalNoteSheet',
+        'ffpettycash': 'modalFFPetty',
+        'localpettycash': 'modalLocalPetty',
+        'businesscard': 'modalBusinessCard',
+        'clearance': 'modalClearance',
+        'capturebill': 'modalCapture',
+        'exchangebill': 'modalExchange',
+        'chequereissue': 'modalChequeReissue'
+      };
+      const targetModal = modalMap[formKey];
+      if (targetModal) {
+        document.getElementById(targetModal).classList.remove('hidden');
+      } else {
+        alert(`Opening ${formKey.toUpperCase()} form module...`);
+      }
+      lucide.createIcons();
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add("hidden");
+    }
+
+    function publishNewPost() {
+      const text = document.getElementById("postInputText").value;
+      if (text) {
+        alert("📢 Post submitted to Admin Queue! Once approved, it will broadcast to targeted portfolios.");
+        document.getElementById("postInputText").value = "";
+      } else {
+        alert("Please write a message first!");
+      }
+    }
+
+    function toggleNotifications() {
+      alert("🔔 Notifications:\n1. LFA Cheque ready at Cash Counter\n2. CBO Sir approved Tour Bill #TB-00118\n3. MD Sir published a new broadcast");
+    }
+
+    function openTopSheetModal() {
+      alert("📄 Official Top Sheet generated for Batch #ACI-B-992 with all 9 digital signature seals stamped!");
+    }
+  </script>
+</body>
+</html>
